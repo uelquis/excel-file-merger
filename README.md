@@ -27,10 +27,10 @@ excelmerger ./pasta
 
 2. Mesclar PDFs e especificar o local de escrita e o nome do arquivo PDF.
 ```bash
-pdfmerger ./pasta --o ./salvar/aqui/mesclado.pdf
+excelmerger ./pasta --o ./salvar/aqui/excel.xlsx
 ```
 
 3. Use a _flag_ 'overwrite' para sobrescrever mesclagens com o mesmo nome.
 ```bash
-pdfmerger ./pasta --o ./salvar/aqui/mesclado.pdf --overwrite
+excelmerger ./pasta --o ./salvar/aqui/excel.xlsx --overwrite
 ```
