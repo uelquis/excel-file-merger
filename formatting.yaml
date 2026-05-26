@@ -1,0 +1,13 @@
+header:
+  bg-color: "#f0f0f0"
+  text-color: "#333333"
+  font-family: "Calibri"
+  font-size: "14pt"
+  border: "thick #dddddd"
+
+cell:
+  bg-color: "#f0f0f0"
+  text-color: "#333333"
+  font-family: "Calibri"
+  font-size: "14pt"
+  border: "thick #dddddd"

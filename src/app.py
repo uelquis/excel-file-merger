@@ -1,4 +1,4 @@
-from pathlib import Path
+from formatter import Formatter
 import typer
 from excel_merger import ExcelMerger
 
@@ -13,7 +13,10 @@ def merge(folder_path: str, o: str = "./merged.xlsx", overwrite: bool = False):
     - overwrite: whether to overwrite existing output file (default: False)"""
 
     merger = ExcelMerger(folder_path=folder_path, output_path=o, overwrite=overwrite)
-    merger.merge_files()
+    
+    merger.merge_files() \
+        .format(Formatter(config_path="./formatting.yaml")) \
+        .save()
 
 if __name__ == "__main__":
     app()

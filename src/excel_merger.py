@@ -8,6 +8,7 @@ class ExcelMerger:
         self.folder_path = Path(folder_path)
         self.output_path = Path(output_path)
         self.overwrite = overwrite
+        self._merged_workbook = None
 
 
     def merge_files(self):
@@ -58,12 +59,31 @@ class ExcelMerger:
                         target_ws.append(list(row))
                 first_wb = False
 
+        self._merged_workbook = merged_wb
+
+        return self
+
+    def save(self):
+
+        if self._merged_workbook is None:
+            raise ValueError("No merged workbook to save. Please run merge_files() first.")
+
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         self.output_path.unlink(missing_ok=True)
 
-        merged_wb.save(self.output_path)
+        self._merged_workbook.save(self.output_path)
 
         print(f"Merged file saved as {self.output_path}")
+
+    def format(self, formatter):
+        """Apply formatting to the merged workbook using a Formatter instance."""
+        if self._merged_workbook is None:
+            raise ValueError("No merged workbook to format. Please run merge_files() first.")
+        
+        for ws in self._merged_workbook.worksheets:
+            formatter.apply(ws)
+
+        return self
     
     def _validate_workbooks(self, workbooks):
 
