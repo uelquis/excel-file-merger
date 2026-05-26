@@ -1,11 +1,16 @@
 from pathlib import Path
-
 from openpyxl import Workbook, load_workbook
+import typer
 
 
 class ExcelMerger:
+    def __init__(self, folder_path: str, output_path: str = "./merged.pdf", overwrite: bool = False):
+        self.folder_path = Path(folder_path)
+        self.output_path = Path(output_path)
+        self.overwrite = overwrite
 
-    def merge_files(self, folder_path):
+
+    def merge_files(self):
         """Merge multiple Excel files into a single Workbook.
 
         - folder_path: path to folder containing .xlsx files
@@ -15,9 +20,15 @@ class ExcelMerger:
         the same sheet titles in the same order, and identical header (first row)
         values for each corresponding sheet. Otherwise raises ValueError.
         """
-        file_paths = self._list_excel_files(folder_path)
+        if not self.folder_path.is_dir():
+            raise ValueError(f"Provided folder path '{self.folder_path}' is not a valid directory")
+
+        file_paths = self._list_excel_files(self.folder_path)
         if not file_paths:
             raise ValueError("No .xlsx files found in the specified folder")
+        
+        if(self.output_path.exists() and not self.overwrite):
+            typer.confirm(f"File {self.output_path} already exists. Do you want to overwrite it?", abort=True)
 
         workbooks = [load_workbook(path) for path in file_paths]
 
@@ -47,7 +58,12 @@ class ExcelMerger:
                         target_ws.append(list(row))
                 first_wb = False
 
-        return merged_wb
+        self.output_path.parent.mkdir(parents=True, exist_ok=True)
+        self.output_path.unlink(missing_ok=True)
+
+        merged_wb.save(self.output_path)
+
+        print(f"Merged file saved as {self.output_path}")
     
     def _validate_workbooks(self, workbooks):
 
@@ -62,9 +78,7 @@ class ExcelMerger:
         for idx, wb in enumerate(workbooks[1:], start=1):
             titles = [ws.title for ws in wb.worksheets]
             if titles != base_titles:
-                raise ValueError(
-                    f"Workbook at index {idx} has different sheet titles: {titles} != {base_titles}"
-                )
+                raise ValueError( f"Workbook at index {idx} has different sheet titles: {titles} != {base_titles}" )
 
         # Validate headers for each sheet
         base_headers = []
@@ -77,9 +91,7 @@ class ExcelMerger:
                 ws = wb.worksheets[s_idx]
                 headers = self._get_header(ws)
                 if headers != base_headers[s_idx]:
-                    raise ValueError(
-                        f"Workbook at index {idx}, sheet '{ws.title}' header mismatch: {headers} != {base_headers[s_idx]}"
-                    )
+                    raise ValueError( f"Workbook at index {idx}, sheet '{ws.title}' header mismatch: {headers} != {base_headers[s_idx]}" )
                 
         return [base_titles, base_headers, n_sheets]
     
@@ -90,6 +102,6 @@ class ExcelMerger:
         except StopIteration:
             return []
 
-    def _list_excel_files(self, folder_path):
+    def _list_excel_files(self, folder_path: Path):
         """Helper method to list .xlsx files in a folder."""
-        return [f for f in Path(folder_path).glob("*.xlsx")]
+        return [f for f in folder_path.glob("*.xlsx")]
