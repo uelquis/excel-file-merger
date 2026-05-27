@@ -1,13 +1,19 @@
 header:
-  bg-color: "#f0f0f0"
-  text-color: "#333333"
-  font-family: "Calibri"
-  font-size: "14pt"
-  border: "thick #dddddd"
+  bg-color: "#ff7d99d1"
+  text-color: "#ff333333"
+  font-name: "Calibri"
+  font-size: "14"
+  text-bold: false
+  text-italic: false
+  text-strikethrough: false
+  border: "thick #fff799d1"
 
 cell:
-  bg-color: "#f0f0f0"
-  text-color: "#333333"
-  font-family: "Calibri"
-  font-size: "14pt"
-  border: "thick #dddddd"
+  bg-color: "#ffffffff"
+  text-color: "#ff333333"
+  font-name: "Calibri"
+  font-size: "11"
+  text-bold: false
+  text-italic: false
+  text-strikethrough: false
+  border: "mediumDashed #ffd17417"
