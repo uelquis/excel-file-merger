@@ -51,7 +51,7 @@ excelmerger ./pasta
 
 2. Mesclar excel e especificar o local de escrita e o nome do arquivo excel.
 ```bash
-excelmerger ./pasta --o ./salvar/aqui/salvo.xlsx
+excelmerger ./pasta --o ./salvar/aqui/excel.xlsx
 ```
 
 3. Use a _flag_ 'overwrite' para sobrescrever mesclagens com o mesmo nome.
@@ -61,5 +61,5 @@ excelmerger ./pasta --o ./salvar/aqui/excel.xlsx --overwrite
 
 4. Use a _flag_ 'style' para aplicar formatação nas tabelas.
 ```bash
-excelmerger ./pasta --style formatting.yaml --o ./salvar/aqui/salvo.xlsx
+excelmerger ./pasta --style formatting.yaml --o ./salvar/aqui/excel.xlsx --overwrite
 ```
