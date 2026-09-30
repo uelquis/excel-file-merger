@@ -4,8 +4,12 @@ from pathlib import Path
 from typing import Any
 
 from openpyxl import Workbook
+from openpyxl.styles import PatternFill
+from openpyxl.worksheet.worksheet import Worksheet
 
+from domain.cell_content import CellContent
 from domain.merged_workbook import MergedWorkbook, MergedWorksheet
+from domain.worksheet_schema import WorksheetSchema
 from events.event_bus import EventBus, MergeCompleted
 
 
@@ -14,10 +18,12 @@ class WorkbookWriter:
 
     For each merged worksheet the output sheet receives the schema's column
     names as header and every merged data row remapped through the schema's
-    source column indices. This applies the user's column selection,
-    ordering and renaming; columns added by the user are written empty.
-    An optional formatter object (anything exposing ``apply(worksheet)``)
-    can style each output worksheet.
+    source column indices. This applies the user's column selection, ordering
+    and renaming. Each cell's preserved RGB background color is re-applied as
+    a solid PatternFill, remapped alongside its value so colors stay aligned
+    through edits; columns added by the user are written empty and colorless.
+    An optional formatter object (anything exposing ``apply(worksheet)``) can
+    style each output worksheet.
     """
 
     def __init__(self, event_bus: EventBus, formatter: Any | None = None) -> None:
@@ -66,7 +72,7 @@ class WorkbookWriter:
 
         Args:
             merged_worksheet: Merged worksheet (schema optional; when absent
-                the raw header and rows are written unchanged).
+                the raw header and rows are written unchanged, colors included).
             output_workbook: Workbook to create the output sheet in.
         """
         schema = merged_worksheet.schema
@@ -74,41 +80,92 @@ class WorkbookWriter:
         output_worksheet = output_workbook.create_sheet(title=sheet_title)
 
         if schema is None:
-            output_worksheet.append(merged_worksheet.header_row)
+            self._write_cell_row(output_worksheet, merged_worksheet.header_row)
             for data_row in merged_worksheet.data_rows:
-                output_worksheet.append(data_row)
+                self._write_cell_row(output_worksheet, data_row)
         else:
-            output_worksheet.append(list(schema.column_names))
+            self._write_cell_row(
+                output_worksheet, self._build_schema_header_cells(merged_worksheet, schema)
+            )
             for data_row in merged_worksheet.data_rows:
-                output_worksheet.append(
-                    self._map_data_row_to_schema(data_row, schema.source_column_indices)
+                self._write_cell_row(
+                    output_worksheet,
+                    self._map_data_row_to_schema(data_row, schema.source_column_indices),
                 )
 
         if self._formatter is not None:
             self._formatter.apply(output_worksheet)
 
-    def _map_data_row_to_schema(
-        self, data_row: list[Any], source_column_indices: list[int | None]
-    ) -> list[Any]:
-        """Remap one merged data row into the edited schema's column layout.
+    def _write_cell_row(
+        self, output_worksheet: Worksheet, cells: list[CellContent]
+    ) -> None:
+        """Append one row of cells, writing values and re-applying fills.
 
         Args:
-            data_row: Raw merged row values.
-            source_column_indices: Per output column, the source column index
-                (None for user-added columns, written empty).
+            output_worksheet: Sheet to append the row to.
+            cells: Row of CellContent to write; empty rows are skipped.
+        """
+        if not cells:
+            return
+        output_worksheet.append([cell.value for cell in cells])
+        written_row = output_worksheet[output_worksheet.max_row]
+        for column_offset, cell in enumerate(cells):
+            if cell.background_color is not None:
+                written_row[column_offset].fill = PatternFill(
+                    fill_type="solid",
+                    start_color=cell.background_color,
+                    end_color=cell.background_color,
+                )
+
+    def _build_schema_header_cells(
+        self, merged_worksheet: MergedWorksheet, schema: WorksheetSchema
+    ) -> list[CellContent]:
+        """Build the output header: edited names over remapped header colors.
+
+        The header cells are remapped through the schema's source indices (so
+        background colors follow any reorder), then each value is replaced by
+        the user's edited column name.
+
+        Args:
+            merged_worksheet: Worksheet providing the original header cells.
+            schema: Edited schema supplying the output column names/order.
 
         Returns:
-            Row values in the schema's column order; missing or added
-            columns become None.
+            Header cells with schema names as values and preserved colors.
         """
-        mapped_row: list[Any] = []
+        remapped_header_cells = self._map_data_row_to_schema(
+            merged_worksheet.header_row, schema.source_column_indices
+        )
+        return [
+            CellContent(value=column_name, background_color=header_cell.background_color)
+            for column_name, header_cell in zip(schema.column_names, remapped_header_cells)
+        ]
+
+    def _map_data_row_to_schema(
+        self, data_row: list[CellContent], source_column_indices: list[int | None]
+    ) -> list[CellContent]:
+        """Remap one merged row into the edited schema's column layout.
+
+        Both the value and the background color travel together, so reorders,
+        renames and removals keep colors aligned with their data.
+
+        Args:
+            data_row: Raw merged row cells.
+            source_column_indices: Per output column, the source column index
+                (None for user-added columns, written empty and colorless).
+
+        Returns:
+            Row cells in the schema's column order; missing or added columns
+            become empty colorless CellContent.
+        """
+        mapped_row: list[CellContent] = []
         for source_column_index in source_column_indices:
             if (
                 source_column_index is None
                 or source_column_index >= len(data_row)
                 or source_column_index < -len(data_row)
             ):
-                mapped_row.append(None)
+                mapped_row.append(CellContent())
             else:
                 mapped_row.append(data_row[source_column_index])
         return mapped_row

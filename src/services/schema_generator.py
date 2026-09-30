@@ -1,7 +1,6 @@
 """Service that pre-generates one content-based schema per merged worksheet."""
 
-from typing import Any
-
+from domain.cell_content import CellContent
 from domain.merged_workbook import MergedWorkbook, MergedWorksheet
 from domain.worksheet_schema import WorksheetSchema
 from events.event_bus import EventBus, SchemasGenerated
@@ -80,11 +79,13 @@ class SchemaGenerator:
         )
         return max(len(merged_worksheet.header_row), widest_data_row_length)
 
-    def _column_name_from_header(self, header_row: list[Any], column_index: int) -> str:
+    def _column_name_from_header(
+        self, header_row: list[CellContent], column_index: int
+    ) -> str:
         """Derive one column name from the header row.
 
         Args:
-            header_row: Header values of the merged worksheet.
+            header_row: Header cells of the merged worksheet.
             column_index: Zero-based index of the column to name.
 
         Returns:
@@ -92,7 +93,7 @@ class SchemaGenerator:
             when the header is missing or the value is empty.
         """
         if column_index < len(header_row):
-            header_value = header_row[column_index]
+            header_value = header_row[column_index].value
             if header_value is not None and str(header_value).strip() != "":
                 return str(header_value).strip()
         return f"Column{column_index + 1}"

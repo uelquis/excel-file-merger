@@ -1,8 +1,8 @@
 """Defines the merged workbook domain object holding merged worksheet data."""
 
 from dataclasses import dataclass, field
-from typing import Any
 
+from domain.cell_content import CellContent
 from domain.worksheet_schema import WorksheetSchema
 
 
@@ -13,24 +13,26 @@ class MergedWorksheet:
     Attributes:
         sheet_title: Title of the merged worksheet (taken from the first
             ingested file containing a worksheet with this name).
-        header_row: Column values of the header, from the first file that
-            contains this worksheet. May be ragged when source files have
-            mismatching headers.
-        data_rows: All non-header rows appended from every source file.
+        header_row: Header cells (value + background color), from the first
+            file that contains this worksheet. May be ragged when source
+            files have mismatching headers.
+        data_rows: All non-header rows appended from every source file, as
+            cells carrying both value and preserved background color.
         schema: Content schema pre-generated from this worksheet's data.
             It is None until the schema generator runs.
     """
 
     sheet_title: str
-    header_row: list[Any] = field(default_factory=list)
-    data_rows: list[list[Any]] = field(default_factory=list)
+    header_row: list[CellContent] = field(default_factory=list)
+    data_rows: list[list[CellContent]] = field(default_factory=list)
     schema: WorksheetSchema | None = None
 
-    def append_data_rows(self, rows: list[list[Any]]) -> None:
+    def append_data_rows(self, rows: list[list[CellContent]]) -> None:
         """Append data rows coming from one source worksheet.
 
         Args:
-            rows: Non-header rows to append to this merged worksheet.
+            rows: Non-header rows (as CellContent) to append to this merged
+                worksheet.
         """
         self.data_rows.extend(rows)
 
