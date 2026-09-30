@@ -2,4 +2,4 @@
 set shell := ["powershell.exe", "-c"]
 
 build:
-    uv run pyinstaller --name "excelmerger" src/app.py
+    uv run pyinstaller excelmerger.spec --noconfirm
