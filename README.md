@@ -1,65 +1,53 @@
-# Excel Merger
+# Excel File Merger
 
-O script junta arquivos excel com tabelas que seguem uma estrutura padrão.
+**English** | [Português](README.pt-BR.md)
 
-### ❓ Como funciona
-O script recebe uma pasta com arquivos excel e junta todos eles em um único arquivo. Opcionalmente,
-o script também pode receber um arquivo .yaml para realizar formatação.
+## Overview
 
-#### Exemplo de Formatação
-```yaml
-header:
-  bg-color: "#ff7d99d1"
-  text-color: "#ff333333"
-  font-name: "Calibri"
-  font-size: "14"
-  text-bold: false
-  text-italic: false
-  text-strikethrough: false
-  border: "thick #fff799d1"
+Excel File Merger is a desktop application that merges the worksheets of
+multiple `.xlsx` files into a single workbook.
 
-cell:
-  bg-color: "#ffffffff"
-  text-color: "#ff333333"
-  font-name: "Calibri"
-  font-size: "11"
-  text-bold: false
-  text-italic: false
-  text-strikethrough: false
-  border: "mediumDashed #ffd17417"
-```
+## Features
 
-### 🥚 Pré-requisitos
-* Python 3.14+
-* [uv](https://docs.astral.sh/uv/)
-* [just](https://github.com/casey/just)
+- **File or folder selection** — add individual `.xlsx` files or an entire
+  folder through the file explorer.
+- **Name-based sheet merging** — same-named worksheets across files are
+  merged into one sheet; sheet order follows the first file, extra names are
+  appended.
+- **Background color preservation** — RGB cell background colors are carried
+  through the merge and stay aligned with their data even after schema edits.
+- **Editable schemas** — the application pre-generates one schema per merged
+  sheet; rename, reorder, add or remove columns in the built-in editor
+  before saving.
+- **Soft validation** — data inconsistencies (sheet present in only some
+  files, header mismatches, dropped blanks) appear as warnings in a dedicated
+  panel; the merge is never blocked by them.
 
-### ⚙️ Instalação
-#### Windows
+## How it works
+
+1. **Select** — add `.xlsx` files or a folder.
+2. **Merge** — worksheets are paired by name and their rows combined;
+   blank rows/columns are removed and cell colors captured.
+3. **Review schemas** — one tab per merged sheet lets you rename, reorder,
+   add or remove columns.
+4. **Save** — the edited schemas are applied and the merged workbook is
+   written to the output `.xlsx` of your choice.
+
+## Prerequisites
+
+- Python 3.14+
+- [uv](https://docs.astral.sh/uv/)
+- [just](https://github.com/casey/just)
+
+## Build & run
+
 ```bash
+# install dependencies
 uv sync
+
+# build the executable (output: dist/)
 just build
-```
-Após buildar o projeto com [pyinstaller](https://pyinstaller.org/) por meio do comando 'just build', o executável e suas dependências estarão dentro da pasta 'dist'.
 
-### 🚀 Uso
-
-1. Forma mais simples de usar a ferramenta. Um arquivo 'merged.xlsx' será criado na pasta em que a ferramenta foi utilizada.
-```bash
-excelmerger ./pasta 
-```
-
-2. Mesclar excel e especificar o local de escrita e o nome do arquivo excel.
-```bash
-excelmerger ./pasta --o ./salvar/aqui/excel.xlsx
-```
-
-3. Use a _flag_ 'overwrite' para sobrescrever mesclagens com o mesmo nome.
-```bash
-excelmerger ./pasta --o ./salvar/aqui/excel.xlsx --overwrite
-```
-
-4. Use a _flag_ 'style' para aplicar formatação nas tabelas.
-```bash
-excelmerger ./pasta --style formatting.yaml --o ./salvar/aqui/excel.xlsx --overwrite
+# run from source (development)
+uv run python src/gui_main.py
 ```

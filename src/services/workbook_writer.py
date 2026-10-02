@@ -32,7 +32,7 @@ class WorkbookWriter:
         Args:
             event_bus: Bus used to publish the MergeCompleted event.
             formatter: Optional styling object with an ``apply(worksheet)``
-                method (for example the legacy Formatter); None disables styling.
+                method; None disables styling.
         """
         self._event_bus = event_bus
         self._formatter = formatter

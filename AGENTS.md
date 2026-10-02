@@ -60,7 +60,7 @@ Example: file1: a,b ; file2: b,a -> merged result: a1+a2, b1+b2 (paired by name,
 
 ### Step 5 - Output, CLI deprecation, packaging [x]
 - `src/services/workbook_writer.py` - applies edited schemas (column selection/order/renaming, optional `Formatter` styling) to merged rows; saves result workbook.
-- Deprecate CLI: `src/app.py`, `src/excel_merger.py`, `src/formatter.py` kept untouched as unused code.
+- Deprecate CLI: `src/app.py`, `src/excel_merger.py`, `src/formatter.py` kept untouched as unused code (later removed entirely, along with formatting.yaml and the typer/pyyaml deps).
 - Update `excelmerger.spec` for GUI entry + tkinter bundling; verify with `just build` and a manual run against `test_input/`.
 
 ### Verification
@@ -94,23 +94,3 @@ Agreed rules:
 
 ### Phase 2 Verification
 - Confirm blank rows/columns removed, header-only columns kept, RGB background colors preserved at correct positions after edits, and packaged GUI still builds and launches.
-
-## Phase 3 Pre-Plan (generic — to be refined after your cache study)
-
-### Step 9 — Cache strategy definition (design decisions)
-Pin down the answers that shape everything else; your study should inform these:
-- What is cached (granularity): per-source-file ingestion results vs. merged workbook vs. both.
-- Cache key & invalidation: how entries are identified (content hash, path+mtime, user-chosen?) and when they become stale.
-- Lifetime & eviction: session-only vs. persistent; manual removal vs. LRU/size caps.
-- Storage: location (app-data vs. project-local) and format (JSON, pickle, sqlite, ...).
-- Output: a concrete Phase 3 plan (replacing this pre-plan in the AGENTS.md tracker, with your approval).
-
-### Step 10 — Cache core behind an interface
-- Domain types for the cached payload + entry metadata (serializable, color/datetime-safe).
-- A CacheService-style component (composition + observer events per AGENTS.md): store, lookup, list, remove, clear — isolated from merging logic so the strategy chosen in Step 9 only affects this layer.
-- New cache events on the EventBus (stored/hit/refreshed/removed + soft-failure warnings for corrupt/stale entries).
-
-### Step 11 — Integration + verification
-- Wire the cache into the ingestion/merge pipeline (cached and fresh sources merge together; pipeline stays order- and name-based as today).
-- GUI surface: whatever selection/management UX Step 9 dictates (e.g., cached-entries panel, status feedback on hits).
-- Verification: round-trip fidelity (values, colors, types), correctness of re-merge with mixed cached+new sources, invalidation behavior, just build + exe smoke run.
